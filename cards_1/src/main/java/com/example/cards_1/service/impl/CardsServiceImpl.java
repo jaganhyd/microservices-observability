@@ -1,10 +1,5 @@
 package com.example.cards_1.service.impl;
 
-import java.util.Optional;
-import java.util.Random;
-
-import org.springframework.stereotype.Service;
-
 import com.example.cards_1.constants.CardsConstants;
 import com.example.cards_1.dto.CardsDto;
 import com.example.cards_1.entity.Cards;
@@ -13,8 +8,13 @@ import com.example.cards_1.exception.ResourceNotFoundException;
 import com.example.cards_1.mapper.CardsMapper;
 import com.example.cards_1.repository.CardsRepository;
 import com.example.cards_1.service.ICardsService;
-
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+import java.util.Random;
 
 @Service
 @AllArgsConstructor
@@ -22,16 +22,25 @@ public class CardsServiceImpl implements ICardsService {
 
 	private CardsRepository cardsRepository;
 
+    private static final Logger logger = LoggerFactory.getLogger(CardsServiceImpl.class);
+
 	/**
 	 * @param mobileNumber - Mobile Number of the Customer
 	 */
 	@Override
 	public void createCard(String mobileNumber) {
 		Optional<Cards> optionalCards = cardsRepository.findByMobileNumber(mobileNumber);
+
 		if (optionalCards.isPresent()) {
+            logger.warn("Card already registered with mobileNumber: {}", mobileNumber);
 			throw new CardAlreadyExistsException("Card already registered with given mobileNumber " + mobileNumber);
 		}
-		cardsRepository.save(createNewCard(mobileNumber));
+
+        Cards newCard = cardsRepository.save(createNewCard(mobileNumber));
+
+        logger.debug("Created new card with cardNumber: {} for mobileNumber: {}",
+                newCard.getCardNumber(), mobileNumber);
+
 	}
 
 	/**
@@ -39,7 +48,8 @@ public class CardsServiceImpl implements ICardsService {
 	 * @return the new card details
 	 */
 	private Cards createNewCard(String mobileNumber) {
-		Cards newCard = new Cards();
+
+        Cards newCard = new Cards();
 		long randomCardNumber = 100000000000L + new Random().nextInt(900000000);
 		newCard.setCardNumber(Long.toString(randomCardNumber));
 		newCard.setMobileNumber(mobileNumber);
@@ -47,6 +57,7 @@ public class CardsServiceImpl implements ICardsService {
 		newCard.setTotalLimit(CardsConstants.NEW_CARD_LIMIT);
 		newCard.setAmountUsed(0);
 		newCard.setAvailableAmount(CardsConstants.NEW_CARD_LIMIT);
+
 		return newCard;
 	}
 
@@ -69,10 +80,15 @@ public class CardsServiceImpl implements ICardsService {
 	 */
 	@Override
 	public boolean updateCard(CardsDto cardsDto) {
-		Cards cards = cardsRepository.findByCardNumber(cardsDto.getCardNumber())
+
+        Cards cards = cardsRepository.findByCardNumber(cardsDto.getCardNumber())
 				.orElseThrow(() -> new ResourceNotFoundException("Card", "CardNumber", cardsDto.getCardNumber()));
-		CardsMapper.mapToCards(cardsDto, cards);
+
+        CardsMapper.mapToCards(cardsDto, cards);
 		cardsRepository.save(cards);
+
+        logger.debug("Updated card with cardNumber: {}", cardsDto.getCardNumber());
+
 		return true;
 	}
 
@@ -82,10 +98,15 @@ public class CardsServiceImpl implements ICardsService {
 	 */
 	@Override
 	public boolean deleteCard(String mobileNumber) {
+
 		Cards cards = cardsRepository.findByMobileNumber(mobileNumber)
 				.orElseThrow(() -> new ResourceNotFoundException("Card", "mobileNumber", mobileNumber));
+
 		cardsRepository.deleteById(cards.getCardId());
-		return true;
+
+        logger.debug("Deleted card with cardNumber: {}", cards.getCardNumber());
+
+        return true;
 	}
 
 }

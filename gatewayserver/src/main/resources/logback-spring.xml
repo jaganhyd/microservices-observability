@@ -1,0 +1,89 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+        <mdcAttributesIncluded>*</mdcAttributesIncluded>
+        <captureCodeAttributes>true</captureCodeAttributes>
+    </appender>
+
+<!--• Usage: This defines a brand new logging destination ("appender") named OpenTelemetry.
+    It is backed by the Java class provided by the OpenTelemetry dependency you added earlier.
+• Why it's there: Instead of writing logs out to a file on your hard drive, this appender i
+    ntercepts every log message as it happens, wraps it into a standard OTLP format,
+    and feeds it into the OpenTelemetry SDK background pipeline so it can be exported over the network.-->
+
+
+    <root level="INFO">  <!--one log 2 destinations-->
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="OpenTelemetry"/>
+    </root>
+</configuration>
+
+<!--
+This logback-spring.xml file is the configuration file that hooks into Logback (Spring Boot's default logging engine). It instructs the framework to process your logs in two completely different ways simultaneously: print them cleanly to the terminal console, and stream them natively over the network into your Grafana LGTM stack.
+Here is the exact usage and line-by-line explanation of what this XML configuration accomplishes:
+
+1. Line-by-Line Technical Breakdown
+
+
+The Pre-Packaged Spring Boot Defaults
+
+xml
+<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+<include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+Use code with caution.
+• Usage: These tags import Spring Boot’s official, pre-configured logging templates.
+• Why it's there: Instead of forcing you to write complex code to define log formatting patterns, trace/span ID positioning, and ANSI text colours for the terminal console, these two lines inherit all standard Spring Boot console behaviors automatically.
+
+The OpenTelemetry Appender Hook
+
+xml
+<appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+Use code with caution.
+• Usage: This defines a brand new logging destination ("appender") named OpenTelemetry. It is backed by the Java class provided by the OpenTelemetry dependency you added earlier.
+• Why it's there: Instead of writing logs out to a file on your hard drive, this appender intercepts every log message as it happens, wraps it into a standard OTLP format, and feeds it into the OpenTelemetry SDK background pipeline so it can be exported over the network.
+
+Capturing MDC Context
+
+xml
+<mdcAttributesIncluded>*</mdcAttributesIncluded>
+Use code with caution.
+• Usage: The * acts as a wildcard instructing Logback to capture every single value stored in the Mapped Diagnostic Context (MDC).
+• Why it's there: Spring Boot automatically places your Trace ID and Span ID into the MDC. By turning this on, the appender binds those tracking IDs to the log payload. If your application code adds custom context (e.g., MDC.put("customerId", "99")), that data is also attached to the log packet.
+
+Capturing Code Line Numbers
+
+xml
+<captureCodeAttributes>true</captureCodeAttributes>
+Use code with caution.
+• Usage: Instructs the log compiler to look backward up the stack execution trace to capture code details.
+• Why it's there: When this is true, OpenTelemetry automatically attaches the exact class name, method name, and line number where the log statement was written (e.g., AccountController.java:42). This metadata is indexed inside Grafana Loki, allowing you to instantly see where an error happened in the source file without guess work.
+
+Activating the Pipelines globally
+
+xml
+<root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="OpenTelemetry"/>
+</root>
+Use code with caution.
+• Usage: This sets the global logging threshold to INFO level and activates the targets.
+• Why it's there: It establishes a dual-stream architecture. Every time your code runs log.info(), the event splits: it prints visually to your CONSOLE terminal window, and simultaneously routes via the OpenTelemetry appender to your background export pipeline.
+
+2. Summary of The Practical Result
+
+When your accounts service runs a method, this file ensures that:
+1. You can still read standard logs in your terminal during local debugging.
+2. The log stream is transmitted dynamically via OTLP into your running otel-lgtm Docker container.
+3. Every log statement inside Grafana Loki is indexed alongside its exact class code parameters, trace parameters, and custom application metadata variables.
+Now that your log configuration details are completely clear, what would you like to explore next?
+• How to verify if these MDC attributes appear correctly inside the Grafana Loki viewer panel?
+• How to configure a Spring RestTemplate or WebClient Bean to pass these same Trace IDs across to your other microservices?
+
+
+
+
+
+
+-->

@@ -86,7 +86,38 @@ management:
         enabled: true		
   info: 
     env: 
-      enabled: true        
+      enabled: true
+
+  #Observability
+  #traces and logs travel through opentelemetry sdk
+  opentelemetry:
+    resource-attributes:
+      service.name: ${spring.application.name} #defines service specific data
+      deployment.environment: "development"     #prod/QA/
+    logging:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/logs
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+  tracing:
+      sampling:
+        probability: 1.0  #Sampling decides what fraction of requests get to traced.
+        #In production, you would never trace 100%. So the default is only 10%
+        #this probability to 1.0, which tells libraries to trace everything.
+        # I want 100% of my request to get traced.[for local learning purpose]
+  #Metrices
+  # metrics are shipped through micrometer own OTLP registry.
+  otlp:
+    metrics:
+      export:
+        url: http://localhost:4318/v1/metrics
+        step: 10s        # push the metrics every 10 seconds
+  metrics:     #we are tagging every metric with the application name
+    tags:
+      application: ${spring.application.name}
 
 endpoints: 
   shutdown: 
@@ -118,11 +149,13 @@ info:
     description: "Jagan Microservice accounts_1 App"
     version: "1.0.0"
     
-logging: 
-  level: 
-    com: 
-      example: 
-        accounts_1: DEBUG
+logging:
+  pattern:
+    console: ${CONSOLE_LOG_PATTERN:%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) %magenta([traceId=%X{traceId:-},spanId=%X{spanId:-}]) - %cyan(%msg%n)}
+  level:
+    com:
+      eazybytes:
+        accounts: DEBUG
         
 resilience4j.circuitbreaker:                             
   configs: 

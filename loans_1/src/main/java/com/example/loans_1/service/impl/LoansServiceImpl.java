@@ -3,6 +3,8 @@ package com.example.loans_1.service.impl;
 import java.util.Optional;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.loans_1.constants.LoansConstants;
@@ -21,17 +23,22 @@ import lombok.AllArgsConstructor;
 public class LoansServiceImpl implements ILoansService {
 
 	private LoansRepository loansRepository;
-
+    private static final Logger logger = LoggerFactory.getLogger(LoansServiceImpl.class);
 	/**
 	 * @param mobileNumber - Mobile Number of the Customer
 	 */
 	@Override
 	public void createLoan(String mobileNumber) {
+
 		Optional<Loans> optionalLoans = loansRepository.findByMobileNumber(mobileNumber);
+
 		if (optionalLoans.isPresent()) {
+            logger.warn("Loan already registered with mobileNumber: {}", mobileNumber);
 			throw new LoanAlreadyExistsException("Loan already registered with given mobileNumber " + mobileNumber);
 		}
-		loansRepository.save(createNewLoan(mobileNumber));
+        Loans newLoan =  loansRepository.save(createNewLoan(mobileNumber));
+        logger.debug("Created new loan with loanNumber: {} for mobileNumber: {}",
+                newLoan.getLoanNumber(), mobileNumber);
 	}
 
 	/**
@@ -39,14 +46,17 @@ public class LoansServiceImpl implements ILoansService {
 	 * @return the new loan details
 	 */
 	private Loans createNewLoan(String mobileNumber) {
+
 		Loans newLoan = new Loans();
 		long randomLoanNumber = 100000000000L + new Random().nextInt(900000000);
+
 		newLoan.setLoanNumber(Long.toString(randomLoanNumber));
 		newLoan.setMobileNumber(mobileNumber);
 		newLoan.setLoanType(LoansConstants.HOME_LOAN);
 		newLoan.setTotalLoan(LoansConstants.NEW_LOAN_LIMIT);
 		newLoan.setAmountPaid(0);
 		newLoan.setOutstandingAmount(LoansConstants.NEW_LOAN_LIMIT);
+
 		return newLoan;
 	}
 
@@ -69,10 +79,16 @@ public class LoansServiceImpl implements ILoansService {
 	 */
 	@Override
 	public boolean updateLoan(LoansDto loansDto) {
-		Loans loans = loansRepository.findByLoanNumber(loansDto.getLoanNumber())
+
+        Loans loans = loansRepository.findByLoanNumber(loansDto.getLoanNumber())
 				.orElseThrow(() -> new ResourceNotFoundException("Loan", "LoanNumber", loansDto.getLoanNumber()));
-		LoansMapper.mapToLoans(loansDto, loans);
-		loansRepository.save(loans);
+
+        LoansMapper.mapToLoans(loansDto, loans);
+
+        loansRepository.save(loans);
+
+        logger.debug("Updated loan with loanNumber: {}", loansDto.getLoanNumber());
+
 		return true;
 	}
 
@@ -82,9 +98,12 @@ public class LoansServiceImpl implements ILoansService {
 	 */
 	@Override
 	public boolean deleteLoan(String mobileNumber) {
+
 		Loans loans = loansRepository.findByMobileNumber(mobileNumber)
 				.orElseThrow(() -> new ResourceNotFoundException("Loan", "mobileNumber", mobileNumber));
 		loansRepository.deleteById(loans.getLoanId());
+
+        logger.debug("Deleted loan with loanNumber: {}", loans.getLoanNumber());
 		return true;
 	}
 

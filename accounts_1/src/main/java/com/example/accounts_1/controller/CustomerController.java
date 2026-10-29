@@ -33,10 +33,12 @@ public class CustomerController { //
 	public ResponseEntity<CustomerDetailsDto> fetchCustomerDetails(@RequestHeader("jbmicroservice-correlation-id") String correlationId,
 			@RequestParam @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber) {
 
-		logger.debug("fetchCustomerDetails method start with correlationId jbmicroservice-correlation-id - {}", correlationId);
-		CustomerDetailsDto customerDetailsDto = iCustomersService.fetchCustomerDetails(mobileNumber, correlationId);
+		//logger.debug("fetchCustomerDetails method start with correlationId jbmicroservice-correlation-id - {}", correlationId);
+        logger.info("Fetching customer details for mobileNumber: {}", mobileNumber);
+        CustomerDetailsDto customerDetailsDto = iCustomersService.fetchCustomerDetails(mobileNumber, correlationId);
 
-		logger.debug("fetchCustomerDetails method end");
+        logger.info("Successfully fetched customer details for mobileNumber: {}", mobileNumber);
+		//logger.debug("fetchCustomerDetails method end");
 		return ResponseEntity.status(HttpStatus.OK).body(customerDetailsDto);
 
 	}

@@ -55,25 +55,35 @@ public class AccountsController {
 
 	@PostMapping("/create")
 	public ResponseEntity<ResponseDto> createAccount(@Valid @RequestBody CustomerDto customerDto) {
-		iAccountsService.createAccount(customerDto);
-		ResponseDto rd = new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201);
+
+        logger.info("Creating account for mobileNumber: {}", customerDto.getMobileNumber());
+        iAccountsService.createAccount(customerDto);
+        logger.info("Successfully created account for mobileNumber: {}", customerDto.getMobileNumber());
+
+        ResponseDto rd = new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201);
 		return ResponseEntity.status(HttpStatus.CREATED).body(rd);
 	}
 
 	@GetMapping("/fetch")
 	public ResponseEntity<CustomerDto> fetchAccountDetails(
 			@RequestParam @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber) {
-		CustomerDto customerDto = iAccountsService.fetchAccount(mobileNumber);
-		return ResponseEntity.status(HttpStatus.OK).body(customerDto);
+
+        logger.info("Fetching account details for mobileNumber: {}", mobileNumber);
+
+        CustomerDto customerDto = iAccountsService.fetchAccount(mobileNumber);
+
+        return ResponseEntity.status(HttpStatus.OK).body(customerDto);
 	}
 
 	@PutMapping("/update")
 	public ResponseEntity<ResponseDto> updateAccountDetails(@Valid @RequestBody CustomerDto customerDto) {
 		boolean isUpdated = iAccountsService.updateAccount(customerDto);
 		if (isUpdated) {
+            logger.info("Successfully updated account details for mobileNumber: {}", customerDto.getMobileNumber());
 			return ResponseEntity.status(HttpStatus.OK)
 					.body(new ResponseDto(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
 		} else {
+            logger.warn("Failed to update account details for mobileNumber: {}", customerDto.getMobileNumber());
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
 					.body(new ResponseDto(AccountsConstants.STATUS_417, AccountsConstants.MESSAGE_417_UPDATE));
 		}
@@ -82,11 +92,18 @@ public class AccountsController {
 	@DeleteMapping("/delete")
 	public ResponseEntity<ResponseDto> deleteAccountDetails(
 			@RequestParam @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber) {
-		boolean isDeleted = iAccountsService.deleteAccount(mobileNumber);
+
+        logger.info("Deleting account details for mobileNumber: {}", mobileNumber);
+
+        boolean isDeleted = iAccountsService.deleteAccount(mobileNumber);
 		if (isDeleted) {
+            logger.info("Successfully deleted account details for mobileNumber: {}", mobileNumber);
+
 			return ResponseEntity.status(HttpStatus.OK)
 					.body(new ResponseDto(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
 		} else {
+            logger.warn("Failed to delete account details for mobileNumber: {}", mobileNumber);
+
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
 					.body(new ResponseDto(AccountsConstants.STATUS_417, AccountsConstants.MESSAGE_417_DELETE));
 		}

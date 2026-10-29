@@ -10,8 +10,8 @@
 	<description>parent-ms</description>
 
 	<modules>
-		<!--<module>configserver_1</module>-->
-		<!--<module>eurekaserver</module>-->
+		<module>configserver_1</module>
+		<module>eurekaserver</module>
 		<module>gatewayserver</module>
 		<module>loans_1</module>
 		<module>cards_1</module>

@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class CustomerDetailsDto { //consolidated data from Accounts+loans+cards
 
 	@NotEmpty(message = "Name can not be a null or empty")

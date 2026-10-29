@@ -26,7 +26,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class AccountsServiceImpl implements IAccountsService {
 
-	private static final Logger log = LoggerFactory.getLogger(AccountsServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(AccountsServiceImpl.class);
 
 	private AccountsRepository accountsRepository;
 	private CustomerRepository customerRepository;
@@ -37,12 +37,17 @@ public class AccountsServiceImpl implements IAccountsService {
 		Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
 
 		if (optionalCustomer.isPresent()) {
+            logger.warn("Customer already registered with mobileNumber: {}", customerDto.getMobileNumber());
 			throw new CustomerAlreadyExistsException(
 					"Customer already registered with given mobileNumber " + customerDto.getMobileNumber());
 		}
 		Customer savedCustomer = customerRepository.save(customer);
-		Accounts savedAccount = accountsRepository.save(createNewAccount(savedCustomer));
-		System.out.println();
+		Accounts newAccount = accountsRepository.save(createNewAccount(savedCustomer));
+
+        logger.debug("Created new account with accountNumber: {} for customerId: {}",
+                newAccount.getAccountNumber(), savedCustomer.getCustomerId());
+
+        System.out.println();
 		//sendCommunication(savedAccount, savedCustomer);
 	}
 
@@ -109,6 +114,7 @@ public class AccountsServiceImpl implements IAccountsService {
 		
 		accountsRepository.deleteByCustomerId(customer.getCustomerId());
 		customerRepository.deleteById(customer.getCustomerId());
+        logger.debug("Deleted account and customer records for customerId: {}", customer.getCustomerId());
 		return true;
 	}
 
