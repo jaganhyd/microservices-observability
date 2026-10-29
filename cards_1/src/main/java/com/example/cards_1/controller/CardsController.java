@@ -70,7 +70,7 @@ public class CardsController {
 	}*/
 
 	@GetMapping("/fetch")
-	public ResponseEntity<CardsDto> fetchCardDetails(@RequestHeader("jbmicroservice-correlation-id") String correlationId, 
+	public ResponseEntity<CardsDto> fetchCardDetails( 
 			@RequestParam @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber) {
 		
 		//logger.debug("fetchCardDetails method start with CORR-ID - {}", correlationId);

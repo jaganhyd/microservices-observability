@@ -12,6 +12,6 @@ import com.example.accounts_1.dto.LoansDto;
 public interface LoansFeignClient {
 	
 	@GetMapping(value="/api/fetch", consumes="application/json")
-	public ResponseEntity<LoansDto> fetchLoanDetails(@RequestHeader("jbmicroservice-correlation-id") String correlationId, @RequestParam  String mobileNumber);
+	public ResponseEntity<LoansDto> fetchLoanDetails(@RequestParam  String mobileNumber);
 
 }

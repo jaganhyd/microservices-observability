@@ -12,6 +12,6 @@ import com.example.accounts_1.dto.CardsDto;
 public interface CardsFeignClient {
 	
 	@GetMapping(value="/api/fetch", consumes="application/json")
-	public ResponseEntity<CardsDto> fetchCardDetails(@RequestHeader("jbmicroservice-correlation-id") String correlationId, @RequestParam  String mobileNumber);
+	public ResponseEntity<CardsDto> fetchCardDetails( @RequestParam  String mobileNumber);
 
 }

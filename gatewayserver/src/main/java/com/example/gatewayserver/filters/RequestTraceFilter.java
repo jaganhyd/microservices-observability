@@ -14,44 +14,45 @@ import reactor.core.publisher.Mono;
 
 @Order(1)
 @Component
-public class RequestTraceFilter implements GlobalFilter {
+public class RequestTraceFilter { //THis class not required anymore
+//public class RequestTraceFilter implements GlobalFilter {
 
-	 private static final Logger logger = LoggerFactory.getLogger(RequestTraceFilter.class);
+	/*private static final Logger logger = LoggerFactory.getLogger(RequestTraceFilter.class);
 	
 	@Autowired
-    FilterUtility filterUtility;
+	FilterUtility filterUtility;
 	
 	
 	@Override   
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) { //Reactive modules used
-		//access req/resp using exchange
-		//Mono single object , Flux-collection of objects 
-		
-		HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
-		
-		if (isCorrelationIdPresent(requestHeaders)) {
-			logger.debug("jbmicroservice-correlation-id found in RequestTraceFilter : {}", filterUtility.getCorrelationId(requestHeaders));
-		
-		} else {
-			String correlationID = generateCorrelationId();
-			exchange = filterUtility.setCorrelationId(exchange, correlationID);
-			logger.debug("jbmicroservice-correlation-id generated in RequestTraceFilter : {}", correlationID);
-		}
-		return chain.filter(exchange);
-		
+	//access req/resp using exchange
+	//Mono single object , Flux-collection of objects 
+	
+	HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
+	
+	if (isCorrelationIdPresent(requestHeaders)) {
+		logger.debug("jbmicroservice-correlation-id found in RequestTraceFilter : {}", filterUtility.getCorrelationId(requestHeaders));
+	
+	} else {
+		String correlationID = generateCorrelationId();
+		exchange = filterUtility.setCorrelationId(exchange, correlationID);
+		logger.debug("jbmicroservice-correlation-id generated in RequestTraceFilter : {}", correlationID);
+	}
+	return chain.filter(exchange);
+	
 	}
 	
 	
 	private boolean isCorrelationIdPresent(HttpHeaders requestHeaders) {
-        if (filterUtility.getCorrelationId(requestHeaders) != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private String generateCorrelationId() {
-        return java.util.UUID.randomUUID().toString();
-    }
+	   if (filterUtility.getCorrelationId(requestHeaders) != null) {
+	       return true;
+	   } else {
+	       return false;
+	   }
+	}
+	
+	private String generateCorrelationId() {
+	   return java.util.UUID.randomUUID().toString();
+	}*/
 
 }

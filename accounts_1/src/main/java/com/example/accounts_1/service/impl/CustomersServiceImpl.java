@@ -1,5 +1,10 @@
 package com.example.accounts_1.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
 import com.example.accounts_1.dto.AccountsDto;
 import com.example.accounts_1.dto.CardsDto;
 import com.example.accounts_1.dto.CustomerDetailsDto;
@@ -14,11 +19,8 @@ import com.example.accounts_1.repository.CustomerRepository;
 import com.example.accounts_1.service.ICustomersService;
 import com.example.accounts_1.service.client.CardsFeignClient;
 import com.example.accounts_1.service.client.LoansFeignClient;
+
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor  //lombok will generate all argsConstr and autowire will happen automatically
@@ -36,7 +38,7 @@ public class CustomersServiceImpl implements ICustomersService {
 	 * @return Customer Details based on a given mobileNumber
 	 */
 	@Override
-	public CustomerDetailsDto fetchCustomerDetails(String mobileNumber, String correlationId) {
+	public CustomerDetailsDto fetchCustomerDetails(String mobileNumber) {
 
         logger.debug("Looking up customer by mobileNumber: {}", mobileNumber);
 		CustomerDetailsDto customerDetailsDto = null;
@@ -54,7 +56,7 @@ public class CustomersServiceImpl implements ICustomersService {
         //LOANS
         logger.debug("Calling loans service for mobileNumber: {}", mobileNumber);
         //Using feignClient
-        ResponseEntity<LoansDto> loansDtoResponseEntity = loansFeignClient.fetchLoanDetails(correlationId, mobileNumber);
+        ResponseEntity<LoansDto> loansDtoResponseEntity = loansFeignClient.fetchLoanDetails(mobileNumber);
         if(null != loansDtoResponseEntity) {
             customerDetailsDto.setLoansDto(loansDtoResponseEntity.getBody());
         } else {
@@ -64,7 +66,9 @@ public class CustomersServiceImpl implements ICustomersService {
 
         //CARDS
         logger.debug("Calling cards service for mobileNumber: {}", mobileNumber);
-        ResponseEntity<CardsDto> cardsDtoResponseEntity = cardsFeignClient.fetchCardDetails(correlationId, mobileNumber);
+        
+        ResponseEntity<CardsDto> cardsDtoResponseEntity = cardsFeignClient.fetchCardDetails(mobileNumber);
+        
         if(null != cardsDtoResponseEntity) {
             customerDetailsDto.setCardsDto(cardsDtoResponseEntity.getBody());
         } else {

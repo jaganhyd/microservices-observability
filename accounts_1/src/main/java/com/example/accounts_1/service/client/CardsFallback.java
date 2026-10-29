@@ -9,7 +9,7 @@ import com.example.accounts_1.dto.CardsDto;
 public class CardsFallback implements CardsFeignClient {
 
 	@Override
-	public ResponseEntity<CardsDto> fetchCardDetails(String correlationId, String mobileNumber) {
+	public ResponseEntity<CardsDto> fetchCardDetails(String mobileNumber) {
 		return null;
 	}
 
