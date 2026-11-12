@@ -1,31 +1,36 @@
-spring:  
+server:
+  port: 8072
+
+spring:
   application: 
-    name: "gatewayserver-1"
+    name: "gatewayserver"
+  reactor:
+    context-propagation: auto
 
   config:                                   # this should comment when use docker compose
     import: "configserver:http://localhost:8071/"
  
   #asking SD(eureka) to locate all individual MSs
-  cloud: 
-    gateway: 
-      discovery: 
-        locator: 
-          enabled: true
-          lowerCaseServiceId: true
-      httpclient: 
-        connect-timeout: 1000
-        response-timeout: 2s
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+              lowerCaseServiceId: true
+          httpclient:
+            connect-timeout: 1000
+            response-timeout: 10s
   
   data: 
     redis: 
       connect-timeout: 2s
       host: localhost
       port: 6379
-      temeout: 1s
-  
-  
+      timeout: 1s
 #Actuator for refresh config props from git
-management: 
+management:
   endpoints: 
     web: 
       exposure: 
@@ -36,13 +41,6 @@ management:
   info: 
     env: 
       enabled: true
-    
-info: 
-  app: 
-    name: "gatewayserver"
-    description: "Jagan Microservice gatewayserver App"
-    version: "1.0.0"
-
 
   #Observability
   #traces and logs travel through opentelemetry sdk
@@ -75,14 +73,28 @@ info:
     tags:
       application: ${spring.application.name}
 
-    
+eureka:
+  instance:
+    preferIpAddress: true #register with ip address instead of dns
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8070/eureka/
+
+info:
+  app:
+    name: "gatewayserver"
+    description: "Jagan Microservice gatewayserver App"
+    version: "1.0.0"
+
 logging:
   pattern:
     console: ${CONSOLE_LOG_PATTERN:%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) %magenta([traceId=%X{traceId:-},spanId=%X{spanId:-}]) - %cyan(%msg%n)}
   level:
     com:
-      eazybytes:
-        accounts: DEBUG
+      example:
+        gatewayserver: DEBUG
         
 resilience4j.circuitbreaker: 
   configs: 
@@ -93,4 +105,15 @@ resilience4j.circuitbreaker:
       waitDurationInOpenState: 10000                    #Time duration it will remain in open state before it goes to half open
       
 
-
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10                             #monitor 10 req before change status close -> open
+        permittedNumberOfCallsInHalfOpenState: 2          #Allow 2 reqs in half Open
+        failureRateThreshold: 50                          #if at least 50% of my requests are failed, circuit breaker pattern can move to the open state from the closed state.
+        waitDurationInOpenState: 10000

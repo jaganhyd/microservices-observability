@@ -29,7 +29,8 @@ public class GatewayserverApplication {
 	@Bean
 	public RouteLocator eazyBankRouteConfig(RouteLocatorBuilder routeLocatorBuilder) { 
 		return routeLocatorBuilder.routes()
-				
+
+                //circuitBreaker
 				.route(p -> p.path("/jbmicroservice/accounts-1/**")
 						.filters(f -> f.rewritePath("/jbmicroservice/accounts-1/(?<segment>.*)", "/${segment}")
 									   .addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
@@ -39,7 +40,8 @@ public class GatewayserverApplication {
 								)
 						.uri("lb://accounts-1")
 				)
-				
+
+                //retry
 				.route(p -> p.path("/jbmicroservice/loans-1/**")
 						.filters(f -> f.rewritePath("/jbmicroservice/loans-1/(?<segment>.*)", "/${segment}")
 										.addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
@@ -50,16 +52,38 @@ public class GatewayserverApplication {
 						 )
 						.uri("lb://loans-1")
 				)
-				
-				.route(p -> p.path("/jbmicroservice/cards-1/**")
-						.filters(f -> f.rewritePath("/jbmicroservice/cards-1/(?<segment>.*)", "/${segment}")
-								.addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
-								.requestRateLimiter(config -> config.setRateLimiter(redisRateLimiter())
-										.setKeyResolver(userKeyResolver())
-									)
-								)
-						.uri("lb://cards-1"))
-				.build();
+                //RateLimiter
+                .route(p -> p.path("/jbmicroservice/cards-1/**")
+                        .filters(f -> f.rewritePath("/jbmicroservice/cards-1/(?<segment>.*)", "/${segment}")
+                                .addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
+                                .requestRateLimiter(config -> config.setRateLimiter(redisRateLimiter())
+                                        .setKeyResolver(userKeyResolver())
+                                )
+                        )
+                        .uri("lb://cards-1"))
+                .build();
+
+
+       /*         RouteLocatorBuilder.Builder routesBuilder = builder.routes();
+                PredicateSpec predicateSpec = routesBuilder.route("loans_route_id");
+                var gatewayFilterSpec = predicateSpec.path("/jbmicroservice/loans-1/**");
+
+                gatewayFilterSpec.rewritePath("/jbmicroservice/loans-1/(?<segment>.*)", "/${segment}");
+                gatewayFilterSpec.addResponseHeader("X-Response-Time", LocalDateTime.now().toString());
+
+                RetryGatewayFilterFactory.RetryConfig retryConfig = new RetryGatewayFilterFactory.RetryConfig();
+                retryConfig.setRetries(3);
+                retryConfig.setMethods(Collections.singletonList(HttpMethod.GET));
+
+                RetryGatewayFilterFactory.BackoffConfig backoffConfig = new RetryGatewayFilterFactory.BackoffConfig();
+                backoffConfig.setFirstBackoff(Duration.ofMillis(100));
+                backoffConfig.setMaxBackoff(Duration.ofMillis(1000));
+                backoffConfig.setFactor(2);
+                backoffConfig.setBasedOnPreviousValue(true);
+                retryConfig.setBackoff(backoffConfig);
+
+                gatewayFilterSpec.retry(retryConfig);
+                Route.AsyncBuilder route = gatewayFilterSpec.uri("lb://loans-1");*/
 	}
 	
 	//To configure/change default CB retry/timeout

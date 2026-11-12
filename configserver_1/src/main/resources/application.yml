@@ -51,7 +51,7 @@ management:
   opentelemetry:
     resource-attributes:
       service.name: ${spring.application.name} #defines service specific data
-      deployment.environment: "development"     #prod/QA/
+      deployment.environment: "development"   #prod/QA/
     logging:
       export:
         otlp:
@@ -82,8 +82,8 @@ logging:
     console: ${CONSOLE_LOG_PATTERN:%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) %magenta([traceId=%X{traceId:-},spanId=%X{spanId:-}]) - %cyan(%msg%n)}
   level:
     com:
-      eazybytes:
-        accounts: DEBUG
+      example:
+        configserver_1: DEBUG
       
       
       
