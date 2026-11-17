@@ -8,6 +8,7 @@ import com.example.cards_1.exception.ResourceNotFoundException;
 import com.example.cards_1.mapper.CardsMapper;
 import com.example.cards_1.repository.CardsRepository;
 import com.example.cards_1.service.ICardsService;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,8 @@ import java.util.Random;
 public class CardsServiceImpl implements ICardsService {
 
 	private CardsRepository cardsRepository;
+
+    private MeterRegistry meterRegistry;
 
     private static final Logger logger = LoggerFactory.getLogger(CardsServiceImpl.class);
 
@@ -38,9 +41,9 @@ public class CardsServiceImpl implements ICardsService {
 
         Cards newCard = cardsRepository.save(createNewCard(mobileNumber));
 
-        logger.debug("Created new card with cardNumber: {} for mobileNumber: {}",
-                newCard.getCardNumber(), mobileNumber);
+        logger.debug("Created new card with cardNumber: {} for mobileNumber: {}", newCard.getCardNumber(), mobileNumber);
 
+        meterRegistry.counter("cards.operations", "operation", "created").increment();
 	}
 
 	/**
@@ -89,6 +92,7 @@ public class CardsServiceImpl implements ICardsService {
 
         logger.debug("Updated card with cardNumber: {}", cardsDto.getCardNumber());
 
+        meterRegistry.counter("cards.operations", "operation", "updated").increment();
 		return true;
 	}
 
@@ -106,6 +110,7 @@ public class CardsServiceImpl implements ICardsService {
 
         logger.debug("Deleted card with cardNumber: {}", cards.getCardNumber());
 
+        meterRegistry.counter("cards.operations", "operation", "deleted").increment();
         return true;
 	}
 

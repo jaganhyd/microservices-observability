@@ -3,6 +3,7 @@ package com.example.accounts_1.service.impl;
 import java.util.Optional;
 import java.util.Random;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,22 +31,29 @@ public class AccountsServiceImpl implements IAccountsService {
 
 	private AccountsRepository accountsRepository;
 	private CustomerRepository customerRepository;
+    private MeterRegistry meterRegistry;
+  /*  is the core Micrometer interface in Spring Boot used to create, store, and publish custom application
+        metrics (like counters, timers, and gauges) to monitoring tools like Prometheus, Grafana, or OpenTelemetry.*/
+
 
 	@Override
 	public void createAccount(CustomerDto customerDto) {
 		Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
-		Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
+
+        Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
 
 		if (optionalCustomer.isPresent()) {
             logger.warn("Customer already registered with mobileNumber: {}", customerDto.getMobileNumber());
-			throw new CustomerAlreadyExistsException(
-					"Customer already registered with given mobileNumber " + customerDto.getMobileNumber());
+			throw new CustomerAlreadyExistsException("Customer already registered with given mobileNumber " + customerDto.getMobileNumber());
 		}
-		Customer savedCustomer = customerRepository.save(customer);
+
+        Customer savedCustomer = customerRepository.save(customer);
 		Accounts newAccount = accountsRepository.save(createNewAccount(savedCustomer));
 
-        logger.debug("Created new account with accountNumber: {} for customerId: {}",
-                newAccount.getAccountNumber(), savedCustomer.getCustomerId());
+        logger.debug("Created new account with accountNumber: {} for customerId: {}",  newAccount.getAccountNumber(), savedCustomer.getCustomerId());
+
+        //will go to grafana
+        meterRegistry.counter("accounts.operations", "operation", "created").increment();
 
         System.out.println();
 		//sendCommunication(savedAccount, savedCustomer);
@@ -100,6 +108,9 @@ public class AccountsServiceImpl implements IAccountsService {
 			customerRepository.save(customer);
 			isUpdated = true;
 		}
+
+        meterRegistry.counter("accounts.operations", "operation", "updated").increment();
+
 		return isUpdated;
 	}
 
@@ -115,7 +126,10 @@ public class AccountsServiceImpl implements IAccountsService {
 		accountsRepository.deleteByCustomerId(customer.getCustomerId());
 		customerRepository.deleteById(customer.getCustomerId());
         logger.debug("Deleted account and customer records for customerId: {}", customer.getCustomerId());
-		return true;
+
+        meterRegistry.counter("accounts.operations", "operation", "deleted").increment();
+
+        return true;
 	}
 
 	/**

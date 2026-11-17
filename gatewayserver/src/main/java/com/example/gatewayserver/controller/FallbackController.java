@@ -15,8 +15,8 @@ public class FallbackController {
 	@RequestMapping("/contactSupport")
 	public Mono<String> contactSupport() {
 
-        logger.warn("Circuit breaker fallback triggered, routing request to contactSupport");
-
+        //logger.warn("Circuit breaker fallback triggered, routing request to contactSupport");
+        logger.error("An error occured, please try after sometime or contact support team");
 		return Mono.just("An error occured, please try after sometime or contact support team");
 	}
 }

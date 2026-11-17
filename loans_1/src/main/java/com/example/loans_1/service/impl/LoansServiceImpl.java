@@ -3,6 +3,7 @@ package com.example.loans_1.service.impl;
 import java.util.Optional;
 import java.util.Random;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ public class LoansServiceImpl implements ILoansService {
 
 	private LoansRepository loansRepository;
     private static final Logger logger = LoggerFactory.getLogger(LoansServiceImpl.class);
+    private MeterRegistry meterRegistry;
+
 	/**
 	 * @param mobileNumber - Mobile Number of the Customer
 	 */
@@ -37,8 +40,11 @@ public class LoansServiceImpl implements ILoansService {
 			throw new LoanAlreadyExistsException("Loan already registered with given mobileNumber " + mobileNumber);
 		}
         Loans newLoan =  loansRepository.save(createNewLoan(mobileNumber));
-        logger.debug("Created new loan with loanNumber: {} for mobileNumber: {}",
-                newLoan.getLoanNumber(), mobileNumber);
+        logger.debug("Created new loan with loanNumber: {} for mobileNumber: {}", newLoan.getLoanNumber(), mobileNumber);
+
+        //custom matrics
+        meterRegistry.counter("loans.operations", "operation", "created").increment();
+
 	}
 
 	/**
@@ -84,10 +90,10 @@ public class LoansServiceImpl implements ILoansService {
 				.orElseThrow(() -> new ResourceNotFoundException("Loan", "LoanNumber", loansDto.getLoanNumber()));
 
         LoansMapper.mapToLoans(loansDto, loans);
-
         loansRepository.save(loans);
-
         logger.debug("Updated loan with loanNumber: {}", loansDto.getLoanNumber());
+
+        meterRegistry.counter("loans.operations", "operation", "updated").increment();
 
 		return true;
 	}
@@ -104,6 +110,9 @@ public class LoansServiceImpl implements ILoansService {
 		loansRepository.deleteById(loans.getLoanId());
 
         logger.debug("Deleted loan with loanNumber: {}", loans.getLoanNumber());
+
+        meterRegistry.counter("loans.operations", "operation", "deleted").increment();
+
 		return true;
 	}
 
