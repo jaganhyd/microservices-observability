@@ -44,11 +44,13 @@ services:
     ports:
       - "8071:8071"
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8071/actuator/health/readiness | grep UP || exit 1"]
+      #test: ["CMD-SHELL", "curl --fail --silent http://localhost:8071/actuator/health/readiness | grep UP || exit 1"]
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8071 && printf 'GET /actuator/health/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\":\"UP\"' <&3" ]
+      #test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 15s
+      start_period: 5s
     deploy:
       resources:
         limits:
@@ -59,9 +61,9 @@ services:
       #OTEL_SERVICE_NAME: "configserver-1"
       #OTEL_EXPORTER_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318"
       #OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/traces"
-      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/logs"
-      MANAGEMENT_OTLP_METRICS_EXPORT_URL: "http://grafana-lgtm-ms:4318/v1/metrics"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/traces
+      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/logs
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://grafana-lgtm:4318/v1/metrics
     networks:
       - jaganMs
 
@@ -75,55 +77,59 @@ services:
       configserver:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8070/actuator/health/readiness | grep UP || exit 1"]
+      #test: ["CMD-SHELL", "curl --fail --silent http://localhost:8070/actuator/health/readiness | grep UP || exit 1"]
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8070 && printf 'GET /actuator/health/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\":\"UP\"' <&3" ]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 15s
+      start_period: 5s
     deploy:
       resources:
         limits:
           memory: 400m
     environment:
       SPRING_APPLICATION_NAME: "eurekaserver"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver-ms:8071/"
-      SPRING_PROFILES_ACTIVE: "default"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+      SPRING_CONFIG_IMPORT: configserver:http://configserver-ms:8071/
+      SPRING_PROFILES_ACTIVE: default
+      #AVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
       #OTEL_SERVICE_NAME: "eurekaserver"
       #OTEL_EXPORTER_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318"
       #OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/traces"
-      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/logs"
-      MANAGEMENT_OTLP_METRICS_EXPORT_URL: "http://grafana-lgtm-ms:4318/v1/metrics"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/traces
+      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/logs
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://grafana-lgtm:4318/v1/metrics
     networks:
       - jaganMs
 
   accounts:
     image: "jagan619/accounts_1:v1"
     container_name: accounts-ms
+    ports:
+      - "8080:8080"
+    healthcheck:
+      #test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health/readiness | grep UP || exit 1"]
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /actuator/health/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\":\"UP\"' <&3" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     depends_on:
       configserver:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health/readiness | grep UP || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
     environment:
       SPRING_APPLICATION_NAME: "accounts-1"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8070/eureka/"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver-ms:8071/"
-      SPRING_PROFILES_ACTIVE: "default"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://configserver-ms:8071/
+      SPRING_PROFILES_ACTIVE: default
+      #JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
       #OTEL_SERVICE_NAME: "accounts-1"
       #OTEL_EXPORTER_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318"
       #OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/traces"
-      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/logs"
-      MANAGEMENT_OTLP_METRICS_EXPORT_URL: "http://grafana-lgtm-ms:4318/v1/metrics"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/traces
+      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/logs
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://grafana-lgtm:4318/v1/metrics
     deploy:
       resources:
         limits:
@@ -134,13 +140,16 @@ services:
   loans:
     image: "jagan619/loans_1:v1"
     container_name: loans-ms
+    ports:
+      - "8090:8090"
     depends_on:
       configserver:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8090/actuator/health/readiness | grep UP || exit 1"]
+      #test: ["CMD-SHELL", "curl --fail --silent http://localhost:8090/actuator/health/readiness | grep UP || exit 1"]
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8090 && printf 'GET /actuator/health/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\":\"UP\"' <&3" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -151,29 +160,32 @@ services:
           memory: 400m
     environment:
       SPRING_APPLICATION_NAME: "loans-1"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8070/eureka/"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver-ms:8071/"
-      SPRING_PROFILES_ACTIVE: "default"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://configserver-ms:8071/
+      SPRING_PROFILES_ACTIVE: default
+      #JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
       #OTEL_SERVICE_NAME: "loans-1"
       #OTEL_EXPORTER_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318"
       #OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/traces"
-      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/logs"
-      MANAGEMENT_OTLP_METRICS_EXPORT_URL: "http://grafana-lgtm-ms:4318/v1/metrics"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/traces
+      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/logs
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://grafana-lgtm:4318/v1/metrics
     networks:
       - jaganMs
 
   cards:
     image: "jagan619/cards_1:v1"
     container_name: cards-ms
+    ports:
+      - "9000:9000"
     depends_on:
       configserver:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9000/actuator/health/readiness | grep UP || exit 1"]
+      #test: ["CMD-SHELL", "curl --fail --silent http://localhost:9000/actuator/health/readiness | grep UP || exit 1"]
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /actuator/health/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '\"status\":\"UP\"' <&3" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -184,16 +196,16 @@ services:
           memory: 400m
     environment:
       SPRING_APPLICATION_NAME: "cards-1"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8070/eureka/"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver-ms:8071/"
-      SPRING_PROFILES_ACTIVE: "default"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://configserver-ms:8071/
+      SPRING_PROFILES_ACTIVE: default
+      #JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
       #OTEL_SERVICE_NAME: "cards-1"
       #OTEL_EXPORTER_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318"
       #OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/traces"
-      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/logs"
-      MANAGEMENT_OTLP_METRICS_EXPORT_URL: "http://grafana-lgtm-ms:4318/v1/metrics"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/traces
+      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/logs
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://grafana-lgtm:4318/v1/metrics
     networks:
       - jaganMs
 
@@ -217,20 +229,20 @@ services:
           memory: 400m
     environment:
       SPRING_APPLICATION_NAME: "gatewayserver-1"
-      SPRING_DATA_REDIS_CONNECT-TIMEOUT: "2s"
-      SPRING_DATA_REDIS_HOST: "redis"
-      SPRING_DATA_REDIS_PORT: "6379"
-      SPRING_DATA_REDIS_TIMEOUT: "1s"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8070/eureka/"
-      SPRING_CONFIG_IMPORT: "configserver:http://configserver-ms:8071/"
-      SPRING_PROFILES_ACTIVE: "default"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+      SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 1s
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://configserver-ms:8071/
+      SPRING_PROFILES_ACTIVE: default
+      #JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
       #OTEL_SERVICE_NAME: "gatewayserver-1"
       #OTEL_EXPORTER_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318"
       #OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/traces"
-      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: "http://grafana-lgtm-ms:4318/v1/logs"
-      MANAGEMENT_OTLP_METRICS_EXPORT_URL: "http://grafana-lgtm-ms:4318/v1/metrics"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/traces
+      MANAGEMENT_OPENTELEMETRY_LOGGING_EXPORT_OTLP_ENDPOINT: http://grafana-lgtm:4318/v1/logs
+      MANAGEMENT_OTLP_METRICS_EXPORT_URL: http://grafana-lgtm:4318/v1/metrics
     networks:
       - jaganMs
 

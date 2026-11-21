@@ -40,8 +40,8 @@ spring:
 #      init: 
 #        mode: always
         
-  config:                                                         # this should comment when use docker compose
-    import: "configserver:http://localhost:8071/"
+#  config:                                                         # this should comment when use docker compose
+#    import: "configserver:http://localhost:8071/"
 
 #commented for docker
 #  rabbitmq:

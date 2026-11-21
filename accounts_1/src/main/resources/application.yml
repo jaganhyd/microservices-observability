@@ -51,8 +51,8 @@ spring:
 #    config:
 #      enabled: true
 #      uri: http://localhost:8071
-  config:                                                        # this should comment when use docker compose
-    import: "configserver:http://localhost:8071/"
+#  config:                                                        # this should comment when use docker compose
+#    import: "configserver:http://localhost:8071/"
   http:
     serviceclient:
       loans:
